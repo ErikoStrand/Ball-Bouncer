@@ -1,13 +1,17 @@
+from webbrowser import get
 import pygame
 import sys
 import math
-import random
+import numpy as np
+import time
 from colour import Color
 from PIL import ImageColor
+
 pygame.init()
 
 clock = pygame.time.Clock()
 infoObject = pygame.display.Info()
+pygame.event.set_allowed([pygame.MOUSEBUTTONDOWN])
 WIDTH, HEIGHT = infoObject.current_w, infoObject.current_h
 DISPLAY = pygame.display.set_mode((WIDTH, HEIGHT))
 SQUARES = []
@@ -18,8 +22,27 @@ FRAGMENT_AMOUNT = 100
 EXPLOSION_SIZE = int(BALL_SIZE * 2)
 SQUARE_AMOUNT = 5
 BALL_SPEED = 600
+BALL_COLORS = []
+EXPLOSION_COLORS = []
+
+def get_colours():
+    gray = Color("gray")
+    btg = list(gray.range_to(Color("black"), 4))  
+    red = Color("red")
+    rty = list(red.range_to(Color("yellow"), 9))
+    yellow = Color("yellow")
+    colors = list(yellow.range_to(Color("red"), TRAIL_SIZE))  
+    for rty in rty:
+        EXPLOSION_COLORS.append(ImageColor.getrgb(str(rty)))
+    for btg in btg:
+        EXPLOSION_COLORS.append(ImageColor.getrgb(str(btg)))
+    for bg in colors:
+        BALL_COLORS.append(ImageColor.getrgb(str(bg)))
+    print(BALL_COLORS)
+            
+        
 class explosion:
-    def __init__(self, display, x, y, width, fragments):
+    def __init__(self, display, x, y, width, fragments, colors):
         self.expansion = 1
         self.fragments_loc = []
         self.fragment_color = []
@@ -31,48 +54,38 @@ class explosion:
         self.width = width
         self.fragments = fragments
         self.spawn_fragments = True
-        self.gray = Color("gray")
-        self.btg = list(self.gray.range_to(Color("black"), 4))  
-        self.red = Color("red")
-        self.rty = list(self.red.range_to(Color("yellow"), 9))  
-        self.colors = []
-        for rty in self.rty:
-            self.colors.append(rty)
-        for btg in self.btg:
-            self.colors.append(btg)
-            
-            
+        self.colors = colors
+                      
     def update(self, dt):
-        self.last_size = self.size
+        self.last_size = self.size - 1
         self.size += int(dt * 280 * self.expansion)
         
         if self.size >  EXPLOSION_SIZE:
             self.size = EXPLOSION_SIZE
-            
+        
         if self.spawn_fragments:
             for i in range(4):
-                radius = random.randint(self.last_size, self.size)
-                angle = random.randint(1, 360)
+                radius = np.random.randint(self.last_size, self.size)
+                angle = np.random.randint(1, 360)
                 fx = int(self.width/2 + radius * math.cos(math.radians(angle)))
                 fy = int(self.width/2 + radius * math.sin(math.radians(angle)))
                 self.fragments_loc.append((fx + self.x, fy + self.y))
                 dist = math.hypot(self.x - fx - self.x , self.y - fy - self.y) / 10
                 dist = int(round(dist, 0))
-                hex = self.colors[dist]
-                self.color = ImageColor.getrgb(str(hex))
+                self.color = self.colors[dist]
                 self.fragment_color.append(self.color)
                 
         if len(self.fragments_loc) >= FRAGMENT_AMOUNT:
             self.spawn_fragments = False
             
         self.width = self.width - (self.decay * dt)
-        
+    
     def draw(self):
         for count, frag in enumerate(self.fragments_loc):
             pygame.draw.circle(self.display, self.fragment_color[count], frag, self.width)
         
 class player:
-    def __init__(self, x, y, width, height, speed, starting_angle, display, displayw, displayh):
+    def __init__(self, x, y, width, height, speed, starting_angle, display, displayw, displayh, colors):
         self.lastpos = []
         self.x = x
         self.y = y
@@ -85,9 +98,8 @@ class player:
         self.displayh = displayh
         self.display = display
         self.trail_len = TRAIL_SIZE
-        self.yellow = Color("yellow")
-        self.colors = list(self.yellow.range_to(Color("red"),self.trail_len))   
-        
+        self.colors = colors   
+    
     def update(self, dt):    
         self.x = self.x + dt*self.speed*(math.cos(math.radians(self.anglex)))
         self.y = self.y + dt*self.speed*(math.sin(math.radians(self.angley)))
@@ -97,47 +109,47 @@ class player:
             self.lastpos.pop(0) 
         self.lastpos.append(pygame.Rect(self.x, self.y, self.width, self.height))
         
-    def draw(self):
-        for count, trail in enumerate(self.lastpos):
-            if 0 < count < len(self.colors) - 1:
-                hex = self.colors[count]
-                self.color = ImageColor.getrgb(str(hex))
-                
-                pygame.draw.circle(self.display, self.color, (trail.x + self.width / 2, trail.y), self.width / 2 - len(self.lastpos) + count)    
-                
         
-while True:
+    def draw(self):
+        self.lenght = len(self.lastpos)  
+        self.lenght_color = len(self.colors)
+        for count, trail in enumerate(self.lastpos):
+            if 0 < count < self.lenght - 1:
+                pygame.draw.circle(self.display, self.colors[count], (trail.x + self.width / 2, trail.y), self.width / 2 - self.lenght + count)    
+                
+get_colours()                
+while 1:
+    start = time.time()
     dt = clock.tick(60) / 1000
     for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            sys.exit()     
         if event.type == pygame.MOUSEBUTTONDOWN:
             sys.exit()
     if SQUARE_AMOUNT > len(SQUARES):
-        SQUARES.append(player(random.randint(100, WIDTH - 100),random.randint(100, WIDTH - 100), BALL_SIZE, BALL_SIZE, BALL_SPEED, random.randint(0, 360), DISPLAY, WIDTH, HEIGHT))   
+        spawn = np.random.randint(100, WIDTH - 100)
+        SQUARES.append(player(spawn , spawn, BALL_SIZE, BALL_SIZE, BALL_SPEED, np.random.randint(0, 360), DISPLAY, WIDTH, HEIGHT, BALL_COLORS))   
    
     # update    
     for item in SQUARES:
         if item.y < 0 + item.width/2:
             item.angley -= 180
-            EXPLOSIONS.append(explosion(DISPLAY, item.x, item.y, int(BALL_SIZE/2), FRAGMENT_AMOUNT))
-        if item.y > item.displayh - item.width/2:
+            EXPLOSIONS.append(explosion(DISPLAY, item.x, item.y, int(BALL_SIZE/2), FRAGMENT_AMOUNT, EXPLOSION_COLORS))
+        elif item.y > item.displayh - item.width/2:
             item.angley += 180
-            EXPLOSIONS.append(explosion(DISPLAY, item.x, item.y, int(BALL_SIZE/2), FRAGMENT_AMOUNT))
-        if item.x < 0:
+            EXPLOSIONS.append(explosion(DISPLAY, item.x, item.y, int(BALL_SIZE/2), FRAGMENT_AMOUNT, EXPLOSION_COLORS))
+        elif item.x < 0:
             item.anglex -= 180
-            EXPLOSIONS.append(explosion(DISPLAY, item.x, item.y, int(BALL_SIZE/2), FRAGMENT_AMOUNT))
-        if item.x > item.displayw - item.width:
+            EXPLOSIONS.append(explosion(DISPLAY, item.x, item.y, int(BALL_SIZE/2), FRAGMENT_AMOUNT, EXPLOSION_COLORS))
+        elif item.x > item.displayw - item.width:
             item.anglex += 180 
-            EXPLOSIONS.append(explosion(DISPLAY, item.x, item.y, int(BALL_SIZE/2), FRAGMENT_AMOUNT))
+            EXPLOSIONS.append(explosion(DISPLAY, item.x, item.y, int(BALL_SIZE/2), FRAGMENT_AMOUNT, EXPLOSION_COLORS))
             
         if item.y < -10 + item.width/2:
             SQUARES.remove(item)
-        if item.y > item.displayh - item.width/2 + 10:
+        elif item.y > item.displayh - item.width/2 + 10:
             SQUARES.remove(item)
-        if item.x < -10:
+        elif item.x < -10:
             SQUARES.remove(item)
-        if item.x > item.displayw - item.width + 10:
+        elif item.x > item.displayw - item.width + 10:
             SQUARES.remove(item)
             
             
@@ -148,9 +160,12 @@ while True:
         if explode.width < 2:
             EXPLOSIONS.remove(explode)
             
-    DISPLAY.fill((134, 123, 42)) 
+    DISPLAY.fill((254, 251, 234)) 
+    
     for explode in EXPLOSIONS:
         explode.draw()  
     for item in SQUARES:
         item.draw()
     pygame.display.flip()
+    stop = time.time()
+    print(str(round(stop - start, 5)) + "s")
