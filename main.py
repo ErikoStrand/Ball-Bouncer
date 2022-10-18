@@ -1,4 +1,3 @@
-from webbrowser import get
 import pygame
 import sys
 import math
@@ -14,31 +13,33 @@ infoObject = pygame.display.Info()
 pygame.event.set_allowed([pygame.MOUSEBUTTONDOWN])
 WIDTH, HEIGHT = infoObject.current_w, infoObject.current_h
 DISPLAY = pygame.display.set_mode((WIDTH, HEIGHT))
+#BACKGROUND = (112, 123, 138)
+BACKGROUND = (0, 0, 0)
 SQUARES = []
 EXPLOSIONS = []
 BALL_SIZE = 50
 TRAIL_SIZE = 20
 FRAGMENT_AMOUNT = 100
-EXPLOSION_SIZE = int(BALL_SIZE * 2)
-SQUARE_AMOUNT = 25
-BALL_SPEED = 600
+EXPLOSION_SIZE = 100
+SQUARE_AMOUNT = 100
+BALL_SPEED = 500
 BALL_COLORS = []
 EXPLOSION_COLORS = []
 
 def get_colours():
-    gray = Color("gray")
-    btg = list(gray.range_to(Color("black"), 4))  
-    red = Color("red")
-    rty = list(red.range_to(Color("yellow"), 9))
-    yellow = Color("yellow")
-    colors = list(yellow.range_to(Color("red"), TRAIL_SIZE))  
+    gray = Color("#545c64")
+    btg = list(gray.range_to(Color("#000000"), 4))  
+    red = Color("#f9e200")
+    rty = list(red.range_to(Color("#e40b00"), 9))
+    
+    yellow = Color("#f9e200")
+    colors = list(yellow.range_to(Color("#e40b00"), TRAIL_SIZE))  
     for rty in rty:
         EXPLOSION_COLORS.append(ImageColor.getrgb(str(rty)))
     for btg in btg:
         EXPLOSION_COLORS.append(ImageColor.getrgb(str(btg)))
     for bg in colors:
         BALL_COLORS.append(ImageColor.getrgb(str(bg)))
-    print(BALL_COLORS)
             
         
 class explosion:
@@ -60,9 +61,11 @@ class explosion:
         self.last_size = self.size - 1
         self.size += int(dt * 280 * self.expansion)
         
+        # sets max size of explosion
         if self.size >  EXPLOSION_SIZE:
             self.size = EXPLOSION_SIZE
-        
+            
+        # might cause lag try fix
         if self.spawn_fragments:
             for i in range(4):
                 radius = np.random.randint(self.last_size, self.size)
@@ -121,13 +124,14 @@ class player:
 get_colours()                
 while 1:
     start = time.time()
-    dt = clock.tick(60) / 1000
+    dt = clock.tick(120) / 500
     for event in pygame.event.get():
         if event.type == pygame.MOUSEBUTTONDOWN:
             sys.exit()
     if SQUARE_AMOUNT > len(SQUARES):
-        spawn = np.random.randint(100, WIDTH - 100)
-        SQUARES.append(player(spawn , spawn, BALL_SIZE, BALL_SIZE, BALL_SPEED, np.random.randint(0, 360), DISPLAY, WIDTH, HEIGHT, BALL_COLORS))   
+        spawnX = np.random.randint(100, WIDTH - 100)
+        spawnY = np.random.randint(100, HEIGHT - 100)
+        SQUARES.append(player(spawnX , spawnY, BALL_SIZE, BALL_SIZE, BALL_SPEED, np.random.randint(0, 360), DISPLAY, WIDTH, HEIGHT, BALL_COLORS))   
    
     # update    
     for item in SQUARES:
@@ -153,10 +157,15 @@ while 1:
         elif item.x > item.displayw - item.width + 10:
             SQUARES.remove(item)
             
-        #for test in SQUARES:
-        #    if test != item:
-        #        if pygame.Rect.colliderect(item.rect, test.rect):
-        #            SQUARES.remove(test)
+        #collision   
+        for test in SQUARES:
+            if test != item:
+                if pygame.Rect.colliderect(item.rect, test.rect):
+                    EXPLOSIONS.append(explosion(DISPLAY, item.x, item.y, int(BALL_SIZE/2), FRAGMENT_AMOUNT, EXPLOSION_COLORS))
+                    SQUARES.remove(test)
+                    try:
+                        SQUARES.remove(item)
+                    except Exception as e: print(e)
            
                
         item.update(dt)
@@ -166,7 +175,7 @@ while 1:
         if explode.width < 2:
             EXPLOSIONS.remove(explode)
             
-    DISPLAY.fill((254, 251, 234)) 
+    DISPLAY.fill(BACKGROUND) 
     
     for explode in EXPLOSIONS:
         explode.draw()  
