@@ -28,7 +28,7 @@ EXPLOSION_COLORS = []
 
 def get_colours():
     gray = Color("#545c64")
-    btg = list(gray.range_to(Color("#000000"), 4))  
+    btg = list(gray.range_to(Color("#000000"), 6))  
     red = Color("#f9e200")
     rty = list(red.range_to(Color("#e40b00"), 9))
     
@@ -68,7 +68,7 @@ class explosion:
         # might cause lag try fix
         if self.spawn_fragments:
             for i in range(4):
-                radius = np.random.randint(self.last_size, self.size)
+                radius = np.random.randint(self.last_size, self.size + np.random.randint(1, 20))
                 angle = np.random.randint(1, 360)
                 fx = int(self.width/2 + radius * math.cos(math.radians(angle)))
                 fy = int(self.width/2 + radius * math.sin(math.radians(angle)))
@@ -181,6 +181,7 @@ while 1:
         explode.draw()  
     for item in SQUARES:
         item.draw()
+        
     pygame.display.flip()
     stop = time.time()
     print(str(round(stop - start, 5)) + "s")
