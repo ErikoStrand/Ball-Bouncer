@@ -20,7 +20,7 @@ BALL_SIZE = 50
 TRAIL_SIZE = 20
 FRAGMENT_AMOUNT = 100
 EXPLOSION_SIZE = int(BALL_SIZE * 2)
-SQUARE_AMOUNT = 5
+SQUARE_AMOUNT = 100
 BALL_SPEED = 600
 BALL_COLORS = []
 EXPLOSION_COLORS = []
@@ -99,6 +99,7 @@ class player:
         self.display = display
         self.trail_len = TRAIL_SIZE
         self.colors = colors   
+        self.rect = pygame.Rect(self.x, self.y - self.width/2, self.width, self.height)
     
     def update(self, dt):    
         self.x = self.x + dt*self.speed*(math.cos(math.radians(self.anglex)))
@@ -152,7 +153,12 @@ while 1:
         elif item.x > item.displayw - item.width + 10:
             SQUARES.remove(item)
             
-            
+        #for test in SQUARES:
+        #    if test != item:
+        #        if pygame.Rect.colliderect(item.rect, test.rect):
+        #            SQUARES.remove(test)
+           
+               
         item.update(dt)
         
     for explode in EXPLOSIONS:
