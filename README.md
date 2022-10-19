@@ -13,3 +13,10 @@
 <p>Now with collisions between balls and explosion when they do so. Sometimes raises a error when trying to remove one of the balls colliding, but not quite sure what casues this. Uses a try and finally to handle this which isnt the best.</p>
 
 <img src="https://user-images.githubusercontent.com/75546186/196530212-0bca4537-2f0a-461c-a14e-12a2f08b2866.png" width=50% height=50%>
+
+<h2> Forth verison</h2>
+<p>Added more customizability to the ball and the explosion with ball size, explosion size, speed, expansion speed, fragment count</p>
+
+<img src="https://user-images.githubusercontent.com/75546186/196671870-e10605d2-3460-48ee-8b30-97d636cce9f9.png" width=50% height=50%>
+
+
