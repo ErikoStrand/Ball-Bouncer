@@ -1,3 +1,4 @@
+from logging import WARNING
 import pygame
 import sys
 import math
@@ -24,7 +25,7 @@ SQUARE_AMOUNT = 10
 BALL_SPEED = 500
 BALL_COLORS = []
 EXPLOSION_COLORS = []
-
+WARNING = []
 CharacterX = 50
 CharacterY = 50
 
@@ -54,7 +55,6 @@ def get_colours():
     for bg in colors:
         BALL_COLORS.append(ImageColor.getrgb(str(bg)))
             
-        
 class explosion:
     def __init__(self, display, x, y, width, fragments, colors, size):
         self.expansion = 1
@@ -134,7 +134,19 @@ class player:
         for count, trail in enumerate(self.lastpos):
             if 0 < count < self.lenght - 1:
                 pygame.draw.circle(self.display, self.colors[count], (trail.x + self.width / 2, trail.y), self.width / 2 - self.lenght + count)    
-                
+class warning:
+    def __init__(self, x, y, time, timetime, angle):
+        self.x = x
+        self.y = y
+        self.time = time 
+        self.timetime = timetime
+        self.angle = angle 
+    def update(self, timetime):  
+        if timetime - self.timetime > self.time:
+            SQUARES.append(player(self.x , self.y, BALL_SIZE, BALL_SIZE, BALL_SPEED, self.angle, DISPLAY, WIDTH, HEIGHT, BALL_COLORS))
+            return True
+    def draw(self):  
+        pygame.draw.circle(DISPLAY, (255, 0, 0), (self.x, self.y), 25)                         
 get_colours()
 start = time.time()               
 while 1:
@@ -165,22 +177,21 @@ while 1:
     if SQUARE_AMOUNT > len(SQUARES):
         spawnX = np.random.randint(100, WIDTH - 100)
         spawnY = np.random.randint(100, HEIGHT - 100)
-        SQUARES.append(player(spawnX , spawnY, BALL_SIZE, BALL_SIZE, BALL_SPEED, np.random.randint(0, 360), DISPLAY, WIDTH, HEIGHT, BALL_COLORS))   
+        if SQUARE_AMOUNT > len(WARNING):
+            if  not objectPlayer.collidepoint((spawnX, spawnY)):
+                WARNING.append(warning(spawnX, spawnY, 1, time.time(), np.random.randint(0, 360)))
+                #SQUARES.append(player(spawnX , spawnY, BALL_SIZE, BALL_SIZE, BALL_SPEED, np.random.randint(0, 360), DISPLAY, WIDTH, HEIGHT, BALL_COLORS))   
    
     # update    
     for item in SQUARES:
         if item.y < 0 + item.width/2:
             item.angley -= 180
-            EXPLOSIONS.append(explosion(DISPLAY, item.x, item.y, int(BALL_SIZE/2), FRAGMENT_AMOUNT, EXPLOSION_COLORS, EXPLOSION_SIZE))
         elif item.y > item.displayh - item.width/2:
             item.angley += 180
-            EXPLOSIONS.append(explosion(DISPLAY, item.x, item.y, int(BALL_SIZE/2), FRAGMENT_AMOUNT, EXPLOSION_COLORS, EXPLOSION_SIZE))
         elif item.x < 0:
             item.anglex -= 180
-            EXPLOSIONS.append(explosion(DISPLAY, item.x, item.y, int(BALL_SIZE/2), FRAGMENT_AMOUNT, EXPLOSION_COLORS, EXPLOSION_SIZE))
         elif item.x > item.displayw - item.width:
             item.anglex += 180 
-            EXPLOSIONS.append(explosion(DISPLAY, item.x, item.y, int(BALL_SIZE/2), FRAGMENT_AMOUNT, EXPLOSION_COLORS, EXPLOSION_SIZE))
             
         if item.y < -10 + item.width/2:
             SQUARES.remove(item)
@@ -207,7 +218,10 @@ while 1:
            
                
         item.update(dt)
-        
+    for warnings in WARNING:
+        if warnings.update(time.time()):
+            WARNING.remove(warnings)
+            
     for explode in EXPLOSIONS:
         explode.update(dt)
         if explode.width < 2:
@@ -220,6 +234,8 @@ while 1:
         explode.draw()  
     for item in SQUARES:
         item.draw()
+    for warnings in WARNING:
+        warnings.draw()
     pygame.display.flip()
     
     
