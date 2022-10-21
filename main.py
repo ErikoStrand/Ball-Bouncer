@@ -19,19 +19,21 @@ SQUARES = []
 EXPLOSIONS = []
 BALL_COLORS = []
 EXPLOSION_COLORS = [] 
-BALL_SIZE = 150
-BALL_AMOUNT = 10
-BALL_SPEED = 500
+BALL_SIZE = 200
+BALL_AMOUNT = 2
+BALL_SPEED = 300
 TRAIL_SIZE = int(BALL_SIZE/2.105263)
-FRAGMENT_AMOUNT = 40
-EXPLOSION_SIZE = 300
-EXPLOSION_EXPANSION = 20
-
+FRAGMENT_AMOUNT = 25
+FRAGMENT_SIZE = 25
+EXPLOSION_SIZE =  1000
+EXPLOSION_EXPANSION = 10
+EXPLOSION_DECAY = 25
+DELETE_BARRIER = 100
+EXPLOSIONS_TOGGLE = 1
 
 COLOR_RANGE = (10)
 OLD_RANGE = (EXPLOSION_SIZE + 20)  
-DELETE_BARRIER = 10
-EXPLOSIONS_TOGGLE = 1
+
 def get_colours():
     gray = Color("#545c64")
     btg = list(gray.range_to(Color("#000000"), 6))  
@@ -49,9 +51,8 @@ def get_colours():
             
 def draw_text(text, font_size, x, y):
     font = pygame.font.Font("AldotheApache.ttf", font_size)
-    a, b = pygame.font.Font.size(font, str(text))
     draw = font.render(str(text), False, (255, 255, 255))
-    DISPLAY.blit(draw, (x - a/2, y))
+    DISPLAY.blit(draw, (x, y))
             
 class explosion:
     def __init__(self, display, x, y, width, fragments, colors):
@@ -62,7 +63,7 @@ class explosion:
         self.display = display
         self.x = x
         self.y = y
-        self.decay = 25
+        self.decay = EXPLOSION_DECAY
         self.width = width
         self.fragments = fragments
         self.spawn_fragments = True
@@ -127,10 +128,16 @@ class player:
             if 0 < count < self.lenght - 1:
                 pygame.draw.circle(self.display, self.colors[count], trail, (self.width / 2 - self.lenght + count))    
                 
-get_colours()                
+get_colours()
+FPS_UPDATE = 1
+diff = 0               
 while 1:
+    if FPS_UPDATE:
+        start_fps = time.time()
+        FPS_UPDATE = 0
+        
     start = time.time()
-    dt = clock.tick(120) / 500
+    dt = clock.tick(240) / 250
     for event in pygame.event.get():
         if event.type == pygame.MOUSEBUTTONDOWN:
             sys.exit()
@@ -164,7 +171,7 @@ while 1:
             for test in SQUARES:
                 if test != item:
                     if pygame.Rect.colliderect(item.rect, test.rect):
-                        EXPLOSIONS.append(explosion(DISPLAY, item.rect.centerx, item.rect.centery, 25, FRAGMENT_AMOUNT, EXPLOSION_COLORS))
+                        EXPLOSIONS.append(explosion(DISPLAY, item.rect.centerx, item.rect.centery, FRAGMENT_SIZE, FRAGMENT_AMOUNT, EXPLOSION_COLORS))
                         SQUARES.remove(test)
                         try:
                             SQUARES.remove(item)
@@ -180,11 +187,18 @@ while 1:
             
     DISPLAY.fill(BACKGROUND) 
     
+        
     for explode in EXPLOSIONS:
         explode.draw()  
     for item in SQUARES:
         item.draw()
-        
-    pygame.display.flip()
     stop = time.time()
-    print(int(round(1/(stop - start), 1)), "FPS")
+    
+    if time.time() - start_fps > 0.25:
+        diff = stop - start
+        FPS_UPDATE = 1
+        
+    if diff > 0:
+        FPS = int(1/diff)
+        draw_text(FPS, 40, 0, 0)
+    pygame.display.flip()

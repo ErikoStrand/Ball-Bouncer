@@ -1,4 +1,3 @@
-from logging import WARNING
 import pygame
 import sys
 import math
@@ -177,12 +176,12 @@ while 1:
                 CharRight = False
         if event.type == pygame.MOUSEBUTTONDOWN:
             sys.exit()
-    if SQUARE_AMOUNT > len(SQUARES):
+       
+    if SQUARE_AMOUNT > len(WARNING):
         spawnX = np.random.randint(100, WIDTH - 100)
         spawnY = np.random.randint(100, HEIGHT - 100)
-        if SQUARE_AMOUNT > len(WARNING):
-            if  not objectPlayer.collidepoint((spawnX, spawnY)):
-                WARNING.append(warning(spawnX, spawnY, 1, time.time(), np.random.randint(0, 360)))
+        if not objectPlayer.collidepoint((spawnX, spawnY)):
+            WARNING.append(warning(spawnX, spawnY, 1, time.time(), np.random.randint(0, 360)))
                 #SQUARES.append(player(spawnX , spawnY, BALL_SIZE, BALL_SIZE, BALL_SPEED, np.random.randint(0, 360), DISPLAY, WIDTH, HEIGHT, BALL_COLORS))   
    
     # update    
