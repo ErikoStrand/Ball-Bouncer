@@ -140,12 +140,15 @@ class warning:
         self.y = y
         self.time = time 
         self.timetime = timetime
-        self.angle = angle 
+        self.angle = angle
+        self.fx = int(self.x + 100 * math.cos(math.radians(self.angle)))
+        self.fy = int(self.y + 100 * math.sin(math.radians(self.angle))) 
     def update(self, timetime):  
         if timetime - self.timetime > self.time:
             SQUARES.append(player(self.x , self.y, BALL_SIZE, BALL_SIZE, BALL_SPEED, self.angle, DISPLAY, WIDTH, HEIGHT, BALL_COLORS))
             return True
     def draw(self):  
+        pygame.draw.line(DISPLAY, (255, 0, 0), (self.x, self.y), (self.fx, self.fy), 5)
         pygame.draw.circle(DISPLAY, (255, 0, 0), (self.x, self.y), 25)                         
 get_colours()
 start = time.time()               
